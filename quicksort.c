@@ -1,3 +1,6 @@
+//compile with the following command
+//gcc -o quicksort quicksort.c
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -11,29 +14,24 @@ int main(void) {
 	
 	clock_t programStart = clock();	
 	
+	//read numbers from an external file into an array
 	FILE* numbers;
 	int size = 100000;
 	int* array = malloc(size*sizeof(int));
-	
 	numbers = fopen("100000n.txt", "r");
 	for (int i=0; i<size; ++i)
 	{
 		fscanf(numbers, "%d", &array[i]);
 	}
 	fclose(numbers);
-	
 	clock_t numbersRead = clock();
-	/*
-	printf("Unsorted: ");
-	printArray(array, size);
-	*/
-	quicksort(array, size);
 	
+	//quicksort function is called for the first time
+	//all other calls are recursively decended from this call
+	quicksort(array, size);
 	clock_t numbersSorted = clock();
 	
-	printf("Sorted: ");
 	printArray(array, size);
-	
     clock_t programEnd = clock();
 	
     double timeToRead = (double)(numbersRead - programStart) / CLOCKS_PER_SEC;
@@ -46,6 +44,8 @@ int main(void) {
 
 int* quicksort(int* array, int size) {
 	
+	//an array with with 0 or 1 elements is always sorted
+	//therefore this function does nothing if size is less than 2
 	if (size > 1)
 	{
 		bool* isLessThan = malloc(size*sizeof(bool));
@@ -54,11 +54,11 @@ int* quicksort(int* array, int size) {
 		int li = 0;
 		int mi = 0;
 		
-		int head = array[0];
+		int pivot = array[0];
 		
 		for (int i=1; i<size; i++)
 		{
-			if (array[i] < head)
+			if (array[i] < pivot)
 			{
 				isLessThan[i] = true;
 				lsize++;
@@ -70,50 +70,43 @@ int* quicksort(int* array, int size) {
 			}
 		}
 		
-		int* lessThanHead = malloc(lsize*sizeof(int));
-		int* moreThanHead = malloc(msize*sizeof(int));
+		int* lessThanPivot = malloc(lsize*sizeof(int));
+		int* moreThanPivot = malloc(msize*sizeof(int));
 		
 		for (int i=1; i<size; i++)
 		{
 			if (isLessThan[i])
 			{
-				lessThanHead[li] = array[i];
+				lessThanPivot[li] = array[i];
 				li++;
 			}
 			else
 			{
-				moreThanHead[mi] = array[i];
+				moreThanPivot[mi] = array[i];
 				mi++;
 			}
 		}
 		
+		//we free arrays as quickly as possible
+		//because of the space complexity
 		free(isLessThan);
-		/*
-		printf("head = %d\nlessThanHead = ", head);
-		printArray(lessThanHead, li);
-		printf("moreThanHead = ");
-		printArray(moreThanHead, mi);
-		printf("-\n");*/
+		quicksort(lessThanPivot, li);
+		quicksort(moreThanPivot, mi);
 		
-		quicksort(lessThanHead, li);
-		quicksort(moreThanHead, mi);
-		
-		int ai;
-		for (ai=0; ai<li; ai++)
+		for (int ai=0; ai<li; ai++)
 		{
-			array[ai] = lessThanHead[ai];
+			array[ai] = lessThanPivot[ai];
 		}
+		free(lessThanPivot);
 		
-		array[ai] = head;
-		
+		array[li] = pivot;
 		int midpoint = li+1;
-		for (ai=0; ai<mi; ai++)
-		{
-			array[midpoint+ai] = moreThanHead[ai];
-		}
 		
-		free(lessThanHead);
-		free(moreThanHead);
+		for (int ai=0; ai<mi; ai++)
+		{
+			array[midpoint+ai] = moreThanPivot[ai];
+		}
+		free(moreThanPivot);
 	}
 }
 
